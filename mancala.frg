@@ -5,7 +5,8 @@ one sig Player1, Player2 extends Player {}
 
 sig Board {
     prev: pfunc Int -> Int,
-    hole: pfunc Int -> Int
+    hole: pfunc Int -> Int,
+    turn: one Player
 }
 
 
@@ -19,6 +20,7 @@ pred wellformed[b: Board] {
                 (holeNum = 0) implies b.prev[holeNum] = 7
                 // no negative marbles
                 b.hole[holeNum] >= 0
+                // no marbles exceeds 7
             }
         }
 }
@@ -27,7 +29,19 @@ pred init[b: Board]{
     // nests empty and cells have two marbles
     b.hole[3]= 0 
     b.hole[7] = 0
+    b.turn = Player1
     all holeNum: Int | (holeNum >= 0 and holeNum <= 7 and holeNum != 3 and holeNum !=7) implies b.hole[holeNum] = 2
+}
+
+pred checkTurn[pre, post: Board, myMancala: Int] {
+    all holeNums: Int | {
+        pre.prev[holeNums] = myMancala and post.hole[holeNums] = pre.hole[holeNums] and (post.hole[myMancala] = add[pre.hole[myMancala], 1]) => {
+            post.turn = pre.turn
+        } 
+        else {
+            post.turn != pre.turn
+        }
+    }
 }
 
 pred updateNumMarbles[pre, post: Board, startingHole, otherMancala: Int] {
@@ -78,22 +92,24 @@ pred updateNumMarbles[pre, post: Board, startingHole, otherMancala: Int] {
 
 }
 
-pred move[pre: Board, holeNum: Int, turn: Player, post: Board] {
+pred move[pre: Board, holeNum: Int, post: Board] {
     // guard:
     holeNum >= 0 and holeNum <= 2 or 
     holeNum >= 4 and holeNum <= 6
 
-    not endGame[pre, turn]
-    (turn = Player1) implies {
+    not endGame[pre]
+    (pre.turn = Player1) implies {
         holeNum >= 0 and holeNum <= 2
         pre.hole[holeNum] > 0
         updateNumMarbles[pre, post, holeNum, 7]
+        checkTurn[pre, post, 3]
     }
 
-    (turn = Player2) implies {
+    (pre.turn = Player2) implies {
         holeNum >= 4 and holeNum <= 6
         pre.hole[holeNum] > 0
         updateNumMarbles[pre, post, holeNum, 3]
+        checkTurn[pre, post, 7]
     }
 
 
@@ -106,7 +122,7 @@ pred move[pre: Board, holeNum: Int, turn: Player, post: Board] {
     // if player 2 turn, starting hole is 4, 5, or 6, and hole 3 shouldn't change
 }
 
-pred player1Win[b: Board, p: Player] {
+pred player1Win[b: Board] {
     // row 1 empty 
     {b.hole[0] = 0
     b.hole[1] = 0
@@ -114,39 +130,57 @@ pred player1Win[b: Board, p: Player] {
 
 }
 
-pred player2Win[b: Board, p: Player] {
+pred player2Win[b: Board] {
     // row 1 empty 
     {b.hole[4] = 0
     b.hole[5] = 0
     b.hole[6] = 0}
 }
 
-pred endGame[b: Board, p: Player] {
-    player1Win[b, p] or player2Win[b, p]
+pred endGame[b: Board] {
+    player1Win[b] or player2Win[b]
 }
 
 pred doNothing[pre, post: Board] {
     -- guard
-    endGame
+    endGame[pre] and endGame[post]
 
     -- action
     all holeNum: Int | {
         pre.hole[holeNum] = post.hole[holeNum]
+        post.turn = pre.turn
     }
-}
-
-pred restrictNumMarbles[b: Board] {
-    all holeNum: Int | b.hole[holeNum] < 7
 }
 
 // checking valid first moves 
-run {
-    some pre, post: Board | {
-        some holeNum: Int, p: Player | { 
-            move[pre, 5, p, post]
-            init[pre]
-            wellformed[pre]
-            wellformed[post]
-        }
-    }
-} for exactly 2 Board
+// run {
+//     some pre, post: Board | {
+//         some holeNum: Int, p: Player | { 
+//             move[pre, 5, p, post]
+//             init[pre]
+//             wellformed[pre]
+//             wellformed[post]
+//         }
+//     }
+// } for exactly 2 Board
+
+one sig Game {
+    first: one Board, 
+    next: pfunc Board -> Board
+}
+
+pred game_trace {
+    init[Game.first]
+    all b: Board | { some Game.next[b] implies {
+        wellformed[b]
+        (some holeNum: Int | 
+            move[b, holeNum, Game.next[b]])
+        or
+        doNothing[b, Game.next[b]]
+        -- TODO: ensure X moves first
+    }}
+}
+
+run { 
+    game_trace
+} for 20 Board for {next is linear}
