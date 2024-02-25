@@ -4,18 +4,20 @@ abstract sig Player {}
 one sig Player1, Player2 extends Player {}
 
 sig Board {
-    next: pfunc Int -> Int,
+    prev: pfunc Int -> Int,
     hole: pfunc Int -> Int
 }
 
 
 pred wellformed[b: Board] {
         all holeNum: Int | {
-            (holeNum < 0 or holeNum > 7) implies b.hole[holeNum] = 0
+            (holeNum < 0 or holeNum > 7) implies no b.hole[holeNum] and no b.prev[holeNum]
             (holeNum >=0 and holeNum <= 7) implies {
                 // ints form cycle from 0 to 7
-                (holeNum < 7) implies b.next[holeNum] = add[holeNum, 1]
-                (holeNum = 7) implies b.next[holeNum] = 0
+                some b.hole[holeNum]
+                (holeNum >0) implies b.prev[holeNum] = subtract[holeNum, 1]
+                (holeNum = 0) implies b.prev[holeNum] = 7
+                // no negative marbles
                 b.hole[holeNum] >= 0
             }
         }
@@ -28,46 +30,67 @@ pred init[b: Board]{
     all holeNum: Int | (holeNum >= 0 and holeNum <= 7 and holeNum != 3 and holeNum !=7) implies b.hole[holeNum] = 2
 }
 
-pred updateNumMarbles[pre, post: Board, startingHole: Int, otherMancala: Int] {
+pred updateNumMarbles[pre, post: Board, startingHole, otherMancala: Int] {
     post.hole[startingHole] = 0
-   
-    // number of original marbles (number of holes to update)
-    // pre.hole[startingHole]
 
-    all holeNums: Int | {
-        // if holeNum is within range of startingHole and startingHole + numMarbles and is in bounds, increment 1
-        (holeNums > startingHole and holeNums <= add[startingHole, pre.hole[startingHole]] and holeNums <= 7) implies 
-        post.hole[holeNums] = add[pre.hole[holeNums],1] 
+    post.hole[otherMancala] = pre.hole[otherMancala]
 
-        // else, need to wrap around
-        (add[startingHole, pre.hole[startingHole]] > 7) implies {
+    // number of holes whose marbles increased = number of marbles in starting hole        
+    #{ holeNum: Int | post.hole[holeNum] = add[pre.hole[holeNum], 1]} = pre.hole[startingHole]
 
-            // if otherMancala is within this range, do mod7
-            (otherMancala < subtract[remainder[add[startingHole, pre.hole[startingHole]], 7], 1]) implies 
-            {
-                // if holeNum > 0 and holeNum < (holeNum + numMarbles) mod 7, and holeNum is not othermancala, increment 1
-                ((holeNum >= 0 and holeNum <= remainder[add[startingHole, pre.hole[startingHole]], 7]) and holeNum != otherMancala) implies
-                post.hole[holeNums] = add[pre.hole[holeNums],1] 
-            }
-
-             // else, do mod7 - 1
-                ((holeNum >= 0 and holeNum <= subtract[remainder[add[startingHole, pre.hole[startingHole]], 7], 1]) and holeNum != otherMancala) implies
-                post.hole[holeNums] = add[pre.hole[holeNums],1] 
+    // for all holes whose marbles increased, their previous hole must also increase (unless it's the starting hole, or the other mancala)
+    all holeNums: Int | (holeNums != startingHole) implies {
+        post.hole[holeNums] = pre.hole[holeNums] or
+        (post.hole[holeNums] = add[pre.hole[holeNums], 1] and
+            {(post.hole[post.prev[holeNums]] = add[pre.hole[pre.prev[holeNums]], 1]) or
+            (post.prev[holeNums] = otherMancala) or
+            (post.prev[holeNums] = startingHole)}
+        )
+        pre.prev[holeNums] = otherMancala and post.hole[holeNums] = add[pre.hole[holeNums], 1] implies {
+            post.hole[post.prev[otherMancala]] = add[pre.hole[pre.prev[otherMancala]], 1]
         }
     }
+
+    // all holeNums: Int | {
+        // // if holeNum is (1) within range of (startingHole and (startingHole + numMarbles))
+        // // (2) is in bounds, and (3) is not the other mancala, increment 1
+        // (holeNum > startingHole and holeNum <= add[startingHole, pre.hole[startingHole]] and holeNum <= 7 and holeNum != otherMancala) implies 
+        // post.hole[holeNum] = add[pre.hole[holeNum],1] 
+
+        // // if the range (startingHole and (startingHole + numMarbles) exceeds bounds, need to wrap around
+        // (add[startingHole, pre.hole[startingHole]] > 7) implies {
+
+        //     // if otherMancala is within the wraparound range, do mod7
+        //     (otherMancala < subtract[remainder[add[startingHole, pre.hole[startingHole]], 7], 1]) => 
+        //     {
+        //         // if holeNum > 0 and holeNum < (holeNum + numMarbles) mod 7, and holeNum is not othermancala, increment 1
+        //         ((holeNum >= 0 and holeNum <= remainder[add[startingHole, pre.hole[startingHole]], 7]) and holeNum != otherMancala) implies
+        //         post.hole[holeNum] = add[pre.hole[holeNum],1] 
+        //     }
+
+        //     // else, do mod7 - 1
+        //     else {
+        //         ((holeNum >= 0 and holeNum <= subtract[remainder[add[startingHole, pre.hole[startingHole]], 7], 1]) and holeNum != otherMancala) implies
+        //         post.hole[holeNum] = add[pre.hole[holeNum],1] 
+        //     }
+        // }
+    // }
 
 }
 
 pred move[pre: Board, holeNum: Int, turn: Player, post: Board] {
     // guard:
-    not endGame 
-    (turn = Player1) implies some holeNum: Int | {
+    holeNum >= 0 and holeNum <= 2 or 
+    holeNum >= 4 and holeNum <= 6
+
+    not endGame[pre, turn]
+    (turn = Player1) implies {
         holeNum >= 0 and holeNum <= 2
         pre.hole[holeNum] > 0
         updateNumMarbles[pre, post, holeNum, 7]
     }
 
-    (turn = Player2) implies some holeNum: Int | {
+    (turn = Player2) implies {
         holeNum >= 4 and holeNum <= 6
         pre.hole[holeNum] > 0
         updateNumMarbles[pre, post, holeNum, 3]
@@ -91,7 +114,7 @@ pred player1Win[b: Board, p: Player] {
 
 }
 
-pred player1Win[b: Board, p: Player] {
+pred player2Win[b: Board, p: Player] {
     // row 1 empty 
     {b.hole[4] = 0
     b.hole[5] = 0
@@ -99,10 +122,10 @@ pred player1Win[b: Board, p: Player] {
 }
 
 pred endGame[b: Board, p: Player] {
-    player1Win or player2Win
+    player1Win[b, p] or player2Win[b, p]
 }
 
-pred doNothing[pre, post: board] {
+pred doNothing[pre, post: Board] {
     -- guard
     endGame
 
@@ -112,7 +135,18 @@ pred doNothing[pre, post: board] {
     }
 }
 
+pred restrictNumMarbles[b: Board] {
+    all holeNum: Int | b.hole[holeNum] < 7
+}
+
+// checking valid first moves 
 run {
-    wellformed
-    init
-} for exactly 1 Board
+    some pre, post: Board | {
+        some holeNum: Int, p: Player | { 
+            move[pre, 5, p, post]
+            init[pre]
+            wellformed[pre]
+            wellformed[post]
+        }
+    }
+} for exactly 2 Board
