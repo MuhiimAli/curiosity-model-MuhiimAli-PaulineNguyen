@@ -8,7 +8,12 @@ sig Board {
     hole: pfunc Int -> Int,
     turn: one Player
 }
-
+---------------------------------------------------------------
+--  -Model of our Board:
+--      -There are exactly 8 holes on the board, numbered 0 through 5
+--      - Each hole has a previous hole (hole0's prev = hole7). This creates a linear, sequantial link between the holes
+--      - The number of marbles per hole can't be negative
+    
 
 pred wellformed[b: Board] {
         all holeNum: Int | {
@@ -24,14 +29,23 @@ pred wellformed[b: Board] {
             }
         }
 }
-
+---------------------------------------------------------------
+--  -For our initial Board, the following are true:
+--      - The two mancalas, hole3 and hole7, are empty
+--      - There are exactly two marbles in each hole
+--      - It is Player1's turn
 pred init[b: Board]{
-    // nests empty and cells have two marbles
+    // mancalas empty and cells have two marbles
     b.hole[3]= 0 
     b.hole[7] = 0
     b.turn = Player1
     all holeNum: Int | (holeNum >= 0 and holeNum <= 7 and holeNum != 3 and holeNum !=7) implies b.hole[holeNum] = 2
 }
+
+---------------------------------------------------------------
+--  (Helper Method for move)
+--  - allows the player to continue playing if they've placed the last marble in their mancala
+--  - If that is not the case, it updates turn to be the next player's turn
 
 pred checkTurn[pre, post: Board, myMancala: Int] {
     all holeNums: Int | {
@@ -43,7 +57,14 @@ pred checkTurn[pre, post: Board, myMancala: Int] {
         }
     }
 }
-
+---------------------------------------------------------------
+--  -(Helper Method for move):
+--  - It updates the number of marbles in each hole after a move is made
+--      - The starting hole, which is the hole that the player chose to pick the marbles from, is set to 0
+--      - The number of marbles in the other person's mancala remains unchanged
+--      - marbles are distributed sequentially
+--      - number of holes whose marbles increased = number of marbles in starting hole 
+--      -- number of marbles increase by 1
 pred updateNumMarbles[pre, post: Board, startingHole, otherMancala: Int] {
     post.hole[startingHole] = 0
 
@@ -64,31 +85,6 @@ pred updateNumMarbles[pre, post: Board, startingHole, otherMancala: Int] {
             post.hole[post.prev[otherMancala]] = add[pre.hole[pre.prev[otherMancala]], 1]
         }
     }
-
-    // all holeNums: Int | {
-        // // if holeNum is (1) within range of (startingHole and (startingHole + numMarbles))
-        // // (2) is in bounds, and (3) is not the other mancala, increment 1
-        // (holeNum > startingHole and holeNum <= add[startingHole, pre.hole[startingHole]] and holeNum <= 7 and holeNum != otherMancala) implies 
-        // post.hole[holeNum] = add[pre.hole[holeNum],1] 
-
-        // // if the range (startingHole and (startingHole + numMarbles) exceeds bounds, need to wrap around
-        // (add[startingHole, pre.hole[startingHole]] > 7) implies {
-
-        //     // if otherMancala is within the wraparound range, do mod7
-        //     (otherMancala < subtract[remainder[add[startingHole, pre.hole[startingHole]], 7], 1]) => 
-        //     {
-        //         // if holeNum > 0 and holeNum < (holeNum + numMarbles) mod 7, and holeNum is not othermancala, increment 1
-        //         ((holeNum >= 0 and holeNum <= remainder[add[startingHole, pre.hole[startingHole]], 7]) and holeNum != otherMancala) implies
-        //         post.hole[holeNum] = add[pre.hole[holeNum],1] 
-        //     }
-
-        //     // else, do mod7 - 1
-        //     else {
-        //         ((holeNum >= 0 and holeNum <= subtract[remainder[add[startingHole, pre.hole[startingHole]], 7], 1]) and holeNum != otherMancala) implies
-        //         post.hole[holeNum] = add[pre.hole[holeNum],1] 
-        //     }
-        // }
-    // }
 
 }
 
@@ -111,17 +107,10 @@ pred move[pre: Board, holeNum: Int, post: Board] {
         updateNumMarbles[pre, post, holeNum, 3]
         checkTurn[pre, post, 7]
     }
-
-
-    // some hole with n marbles is now empty
-
-    // following n holes inc marbles by 1 
-
-    // if player 1 turn, starting hole is 0, 1, or 2, and hole 7 shouldn't change
-
-    // if player 2 turn, starting hole is 4, 5, or 6, and hole 3 shouldn't change
 }
 
+-------------------------------------------------------------------
+--  - player one wins if hole0, hole1 and hole2 are empty
 pred player1Win[b: Board] {
     // row 1 empty 
     {b.hole[0] = 0
@@ -130,6 +119,8 @@ pred player1Win[b: Board] {
 
 }
 
+-------------------------------------------------------------------
+--  - player 2 wins if hole4, hole5 and hole6 are empty
 pred player2Win[b: Board] {
     // row 1 empty 
     {b.hole[4] = 0
@@ -137,10 +128,16 @@ pred player2Win[b: Board] {
     b.hole[6] = 0}
 }
 
+-------------------------------------------------------------------
+--  Game ends when there is a player
 pred endGame[b: Board] {
     player1Win[b] or player2Win[b]
 }
 
+-------------------------------------------------------------------
+--  - After game ends:
+--      - winner stays winner
+--      - no more moves can be made. Thus, board remains unchanged
 pred doNothing[pre, post: Board] {
     -- guard
     endGame[pre] and endGame[post]
