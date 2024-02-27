@@ -16,18 +16,21 @@ sig Board {
     
 
 pred wellformed[b: Board] {
-        all holeNum: Int | {
-            (holeNum < 0 or holeNum > 7) implies no b.hole[holeNum] and no b.prev[holeNum]
-            (holeNum >=0 and holeNum <= 7) implies {
-                // ints form cycle from 0 to 7
-                some b.hole[holeNum]
-                (holeNum >0) implies b.prev[holeNum] = subtract[holeNum, 1]
-                (holeNum = 0) implies b.prev[holeNum] = 7
-                // no negative marbles
-                b.hole[holeNum] >= 0
-                // no marbles exceeds 7
-            }
+    all holeNum: Int | {
+        (holeNum < 0 or holeNum > 7) implies no b.hole[holeNum] and no b.prev[holeNum]
+        (holeNum >=0 and holeNum <= 7) implies {
+            // ints form cycle from 0 to 7
+            some b.hole[holeNum]
+            (holeNum >0) implies b.prev[holeNum] = subtract[holeNum, 1]
+            (holeNum = 0) implies b.prev[holeNum] = 7
+            // no negative marbles
+            b.hole[holeNum] >= 0
+            // no marbles exceeds 7
         }
+    }
+    // Ensure total number of marbles on the board is 12
+    add[b.hole[0], b.hole[1], b.hole[2], b.hole[3], b.hole[4], b.hole[5], b.hole[6],b.hole[7]] = 12
+
 }
 ---------------------------------------------------------------
 --  -For our initial Board, the following are true:
@@ -87,9 +90,13 @@ pred updateNumMarbles[pre, post: Board, startingHole, otherMancala: Int] {
     }
 
 }
-
+-- "transition relation"
 pred move[pre: Board, holeNum: Int, post: Board] {
-    // guard:
+    -- guard: c 
+    -- cant move backwar
+    -- valid move location
+    -- it needs to be the player's turn 
+
     holeNum >= 0 and holeNum <= 2 or 
     holeNum >= 4 and holeNum <= 6
 
@@ -174,7 +181,6 @@ pred game_trace {
             move[b, holeNum, Game.next[b]])
         or
         doNothing[b, Game.next[b]]
-        -- TODO: ensure X moves first
     }}
 }
 
