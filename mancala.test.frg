@@ -56,6 +56,12 @@ test suite for wellformed {
     assert all b: Board | emptyBoard[b] is sufficient for wellformed[b]
     -- a board with 7 marbles in all holes is wellformed
     assert all b: Board | fullBoard[b] is sufficient for wellformed[b]
+
+    test expect { 
+        -- wellformed board is sat
+        wellformedSat: { some b: Board | wellformed[b] } is sat
+    }
+    
 }
 
 test suite for notWellformed {
@@ -111,18 +117,20 @@ test suite for init {
     assert all b: Board | only7GoodHoles[b] is sufficient for init[b]
 
     test expect { 
+        -- initial board is sat
+        initSat: { some b: Board | init[b] } is sat
         -- initial board can be wellformed
-        initWellformed: { all b: Board | wellformed[b] and init[b] } is sat
+        initWellformed: { some b: Board | wellformed[b] and init[b] } is sat
         -- initial board doesn't guarantee non-negative holes like wellformed does 
-        initNegHoles: { all b: Board | someNegHoles[b] and init[b] } is sat
+        initNegHoles: { some b: Board | someNegHoles[b] and init[b] } is sat
         -- initial board doesn't guarantee correct prev field like wellformed does
-        initPrevNotOrdered: { all b: Board | nonOrderedPrev[b] and init[b] } is sat
+        initPrevNotOrdered: { some b: Board | nonOrderedPrev[b] and init[b] } is sat
         -- player two can't ever start on initial board
-        playerTwoStarts: { all b: Board | b.turn = Player2 and init[b] } is unsat
+        playerTwoStarts: { some b: Board | b.turn = Player2 and init[b] } is unsat
         -- a board with negative marbles in mancala is not init
-        initNegMarbles: { all b: Board | b.hole[3] = -1 and init[b] } is unsat
+        initNegMarbles: { some b: Board | b.hole[3] = -1 and init[b] } is unsat
         -- an empty board is not init
-        initEmpty: { all b: Board | emptyBoard[b] and init[b]} is unsat 
+        initEmpty: { some b: Board | emptyBoard[b] and init[b]} is unsat 
     }
 }
 
@@ -209,6 +217,11 @@ test suite for checkTurn {
     assert all disj b1, b2: Board | noTurnSwitchMove[b1, b2] is sufficient for checkTurn[b1, b2, 3]
     -- moving marbles past my mancala and switching the turn satisfies checkTurn
     assert all disj b1, b2: Board | turnSwitchMove[b1, b2] is sufficient for checkTurn[b1, b2, 7]
+
+    test expect { 
+        -- checkTurn is sat
+        checkTurnSat: { some b1, b2: Board, myMancala: Int | checkTurn[b1, b2, myMancala] } is sat
+    }
 }
 
 test suite for notCheckTurn {
@@ -282,8 +295,13 @@ test suite for updateNumMarbles {
     assert all disj b1, b2: Board | player2MoveTwoMarbles[b1, b2] is sufficient for updateNumMarbles[b1, b2, 5, 3]
     -- a move that switches turns and starts at hole 6 satisfies updateNumMabrles
     assert all disj b1, b2: Board | turnSwitchMove[b1, b2] is sufficient for updateNumMarbles[b1, b2, 6, 3]
-    -- updating num marbles does not interfere with checkturn 
-    test expect { updateMarblesAndTurn : {some disj b1, b2: Board, h: Int | checkTurn[b1, b2, 3] and updateNumMarbles[b1, b2, h, 7]} is sat}
+    
+    test expect { 
+        -- updating num marbles does not interfere with checkturn 
+        updateMarblesAndTurn : {some disj b1, b2: Board, h: Int | checkTurn[b1, b2, 3] and updateNumMarbles[b1, b2, h, 7]} is sat
+        -- updateNumMarbles is sat
+        updateMarblesSat: { some disj b1, b2: Board, h: Int | updateNumMarbles[b1, b2, h, 7] } is sat
+    }
 
 }
 
@@ -623,9 +641,18 @@ pred twoTransitionsAtOnce {
     }
 }
 
+pred lessThan7MarblesEach[g: Game] {
+    wellformedBoards[g]
+    all b: Board | wellformed[b] implies {some g.next[b] implies {
+        wellformed[b] 
+        all holeNum: Int | b.hole[holeNum] < 7
+        }}
+}
+
 test suite for game_trace {
     assert all g: Game | init[g.first] is necessary for game_trace 
     assert all g: Game | wellformedBoards[g] is necessary for game_trace
+    assert all g: Game | lessThan7MarblesEach[g] is necessary for game_trace for {next is linear}
 
     test expect { 
         -- initial move satisfies game_trace
@@ -656,6 +683,7 @@ pred someGoodFirstMove[pre, post: Board] {
 
 pred someGoodMove[pre, post: Board] {
     wellformed[pre]
+    // we tested that the following property is preserved in a valid game_trace (though it's not explicitly constrained)
     all holeNum: Int | pre.hole[holeNum] < 7 
     makeMove[pre, post]
 }
