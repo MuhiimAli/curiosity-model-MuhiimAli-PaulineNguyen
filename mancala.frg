@@ -25,7 +25,6 @@ pred wellformed[b: Board] {
             (holeNum = 0) implies b.prev[holeNum] = 7
             // no negative marbles
             b.hole[holeNum] >= 0
-            // no marbles exceeds 7
         }
     }
     // Ensure total number of marbles on the board is 12
@@ -89,6 +88,13 @@ pred updateNumMarbles[pre, post: Board, startingHole, otherMancala: Int] {
         pre.prev[holeNums] = otherMancala and post.hole[holeNums] = add[pre.hole[holeNums], 1] implies {
             post.hole[post.prev[otherMancala]] = add[pre.hole[pre.prev[otherMancala]], 1]
         }
+    }
+
+    // frame condition: everything else about board should stay the same
+    all holeNums: Int | {
+        some pre.prev[holeNums] implies post.prev[holeNums] = pre.prev[holeNums]
+        no pre.prev[holeNums] implies no post.prev[holeNums]
+        no pre.hole[holeNums] implies no post.hole[holeNums]
     }
 
 }
@@ -156,6 +162,13 @@ pred doNothing[pre, post: Board] {
         pre.hole[holeNum] = post.hole[holeNum]
         post.turn = pre.turn
     }
+
+    -- frame
+    all holeNums: Int | {
+        some pre.prev[holeNums] implies post.prev[holeNums] = pre.prev[holeNums]
+        no pre.prev[holeNums] implies no post.prev[holeNums]
+        no pre.hole[holeNums] implies no post.hole[holeNums]
+    }
 }
 
 //checking valid first moves 
@@ -176,8 +189,9 @@ one sig Game {
 }
 
 pred game_trace {
+    wellformed[Game.first]
     init[Game.first]
-    all b: Board | wellformed[b] and { some Game.next[b] implies {
+    all b: Board | { some Game.next[b] implies {
         (some holeNum: Int | 
             move[b, holeNum, Game.next[b]])
         or

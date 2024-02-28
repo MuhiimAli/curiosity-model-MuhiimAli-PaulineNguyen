@@ -589,15 +589,15 @@ test suite for notDoNothing {
 ---------------------------------------------------------------
 
 // PREDICATES FOR TESTING GAME_TRACE
-pred wellformedBoards {
-    all b: Board | wellformed[b]
+pred wellformedBoards[g : Game] {
+    all b: Board | wellformed[b] implies {some g.next[b] implies {wellformed[b]}}
 }
 
 pred oneMove {
     init[Game.first]
     some Game.next[Game.first]
     some holeNum: Int | move[Game.first, holeNum, Game.next[Game.first]]
-    wellformedBoards
+    wellformedBoards[Game]
 }
 
 pred someMove {
@@ -611,11 +611,11 @@ pred oneDoNothing {
     init[Game.first]
     some Game.next[Game.first]
     doNothing[Game.first, Game.next[Game.first]]
-    wellformedBoards
+    wellformedBoards[Game]
 }
 
 pred twoTransitionsAtOnce {
-    wellformedBoards
+    wellformedBoards[Game]
     some b: Board | {
         some Game.next[b]
         doNothing[b, Game.next[b]]
@@ -625,7 +625,7 @@ pred twoTransitionsAtOnce {
 
 test suite for game_trace {
     assert all g: Game | init[g.first] is necessary for game_trace 
-    assert all g: Game | wellformedBoards is necessary for game_trace
+    assert all g: Game | wellformedBoards[g] is necessary for game_trace
 
     test expect { 
         -- initial move satisfies game_trace
@@ -638,3 +638,29 @@ test suite for game_trace {
         twoTransitions: {twoTransitionsAtOnce and game_trace} is unsat
     }
 }
+
+---------------------------------------------------------------
+
+// INDUCTION 
+
+pred makeMove[pre, post: Board] {
+   some holeNum: Int | move[pre, holeNum, post] or
+   doNothing[pre, post]
+}
+
+pred someGoodFirstMove[pre, post: Board] {
+    wellformed[pre]
+    init[pre]
+    makeMove[pre, post]
+}
+
+pred someGoodMove[pre, post: Board] {
+    wellformed[pre]
+    all holeNum: Int | pre.hole[holeNum] < 7 
+    makeMove[pre, post]
+}
+
+-- a first move made on the initial board will result in a wellformed post board 
+assert all disj b1, b2: Board | someGoodFirstMove[b1, b2] is sufficient for wellformed[b2] for exactly 2 Board
+-- a move made on a wellformed pre board will result in a wellformed post board
+assert all disj b1, b2: Board | someGoodMove[b1, b2] is sufficient for wellformed[b2] for exactly 2 Board
