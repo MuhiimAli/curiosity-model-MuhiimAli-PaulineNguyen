@@ -29,7 +29,7 @@ pred wellformed[b: Board] {
         }
     }
     // Ensure total number of marbles on the board is 12
-    add[b.hole[0], b.hole[1], b.hole[2], b.hole[3], b.hole[4], b.hole[5], b.hole[6],b.hole[7]] = 12
+    //add[b.hole[0], b.hole[1], b.hole[2], b.hole[3], b.hole[4], b.hole[5], b.hole[6],b.hole[7]] = 12
 
 }
 ---------------------------------------------------------------
@@ -52,11 +52,13 @@ pred init[b: Board]{
 
 pred checkTurn[pre, post: Board, myMancala: Int] {
     all holeNums: Int | {
-        pre.prev[holeNums] = myMancala and post.hole[holeNums] = pre.hole[holeNums] and (post.hole[myMancala] = add[pre.hole[myMancala], 1]) => {
-            post.turn = pre.turn
-        } 
-        else {
-            post.turn != pre.turn
+        pre.prev[holeNums] = myMancala implies {
+            (post.hole[holeNums] = pre.hole[holeNums] and post.hole[myMancala] = add[pre.hole[myMancala], 1]) => {
+                post.turn = pre.turn
+            } 
+            else {
+                post.turn != pre.turn
+            }
         }
     }
 }
@@ -156,11 +158,11 @@ pred doNothing[pre, post: Board] {
     }
 }
 
-// checking valid first moves 
+//checking valid first moves 
 // run {
 //     some pre, post: Board | {
-//         some holeNum: Int, p: Player | { 
-//             move[pre, 5, p, post]
+//         some holeNum: Int | { 
+//             move[pre, holeNum, post]
 //             init[pre]
 //             wellformed[pre]
 //             wellformed[post]
@@ -175,8 +177,7 @@ one sig Game {
 
 pred game_trace {
     init[Game.first]
-    all b: Board | { some Game.next[b] implies {
-        wellformed[b]
+    all b: Board | wellformed[b] and { some Game.next[b] implies {
         (some holeNum: Int | 
             move[b, holeNum, Game.next[b]])
         or
@@ -186,4 +187,4 @@ pred game_trace {
 
 run { 
     game_trace
-} for 20 Board for {next is linear}
+} for 15 Board for {next is linear}
