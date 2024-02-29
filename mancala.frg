@@ -223,9 +223,10 @@ one sig Game {
 pred game_trace {
     wellformed[Game.first]
     init[Game.first]
-    all b: Board | { some Game.next[b] implies {
-        (some holeNum: Int | move[b, holeNum, Game.next[b]]) or
-        doNothing[b, Game.next[b]]
+    all b: Board | { 
+        some Game.next[b] implies {
+            (some holeNum: Int | move[b, holeNum, Game.next[b]]) or
+            doNothing[b, Game.next[b]]
     }}
 }
 
