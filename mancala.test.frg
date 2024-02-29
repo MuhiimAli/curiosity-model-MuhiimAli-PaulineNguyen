@@ -106,6 +106,7 @@ pred only7GoodHoles[b: Board] {
     b.hole[-2] = -2
 }
 
+// TEST SUITE FOR INIT
 test suite for init {
     -- mancalas must start out with no marbles
     assert all b: Board | correctMancalas[b] is necessary for init[b]
@@ -208,6 +209,7 @@ pred myMancalaDecreased[pre, post: Board, myMancala: Int] {
     post.turn = pre.turn
 }
 
+// TEST SUITE FOR CHECKTURN + NOTCHECKTURN
 test suite for checkTurn {
     -- checkTurn ensures that if my mancala doesn't get a new marble, there's turn switching
     assert all disj b1, b2: Board, h: Int | turnSwitchCase[b1, b2, h] is necessary for checkTurn[b1, b2, h]
@@ -284,6 +286,7 @@ pred marbleMoveWrongWay[pre, post: Board] {
     post.hole[3] = pre.hole[0]
 }
 
+// TEST SUITE FOR UPDATENUMMARBLES + NOTUPDATENUMMARBLES
 test suite for updateNumMarbles {
     -- starting hole must be empty after a player makes a move
     assert all disj b1, b2: Board, h, otherMancala: Int | startingHoleEmpty[b1, b2, h] is necessary for updateNumMarbles[b1, b2, h, otherMancala]
@@ -427,6 +430,7 @@ pred moveWrongWay[pre, post: Board] {
     }
 }
 
+// TEST SUITE FOR MOVE + NOTMOVE
 test suite for move {
     -- starting hole must be in the respective player's row
     assert all disj b1, b2: Board, h: Int | correctStartingHole[b1, h] is necessary for move[b1, h, b2]
@@ -441,11 +445,11 @@ test suite for move {
 
     test expect { 
         -- move doesn't interfere with wellformed
-        wellformedMove: {all disj b1, b2: Board, h: Int | wellformed[b1] and move[b1, h, b2]} is sat
+        wellformedMove: {some disj b1, b2: Board, h: Int | wellformed[b1] and move[b1, h, b2]} is sat
         -- move works with initial board
-        initMove: {all disj b1, b2: Board, h: Int | init[b1] and move[b1, h, b2]} is sat
+        initMove: {some disj b1, b2: Board, h: Int | init[b1] and move[b1, h, b2]} is sat
         -- move is satisfiable
-        moveOnly: {all disj b1, b2: Board, h: Int | move[b1, h, b2]} is sat
+        moveOnly: {some disj b1, b2: Board, h: Int | move[b1, h, b2]} is sat
     }
 }
 
@@ -510,7 +514,7 @@ test suite for player1Win {
     -- the three empty holes must be 0, 1, 2 (player 1's row)
     assert all b: Board | holes012Empty[b] is necessary for player1Win[b]
     -- the board when player 1 wins can be wellformed
-    test expect { wellFormedPLayer1Win : {all b: Board | wellformed[b] and player1Win[b]} is sat}
+    test expect { wellFormedPLayer1Win : {some b: Board | wellformed[b] and player1Win[b]} is sat}
 }
 
 test suite for notPlayer1Win {
@@ -526,7 +530,7 @@ test suite for player2Win {
     -- the three empty holes must be 4, 5, 6 (player 2's row)
     assert all b: Board | holes456Empty[b] is necessary for player2Win[b]
     -- the board when player 2 wins can be wellformed
-    test expect { wellFormedPLayer2Win : {all b: Board | wellformed[b] and player2Win[b]} is sat}
+    test expect { wellFormedPLayer2Win : {some b: Board | wellformed[b] and player2Win[b]} is sat}
 }
 
 test suite for notPlayer2Win {
@@ -544,7 +548,7 @@ test suite for endGame {
     -- player 2 winning will end game
     assert all b: Board | player2Win[b] is sufficient for endGame[b]
     -- both players can win at once (though not expected in game)
-    test expect { bothPlayersWin: {all b: Board | player1Win[b] and player2Win[b] and endGame[b]} is sat}
+    test expect { bothPlayersWin: {some b: Board | player1Win[b] and player2Win[b] and endGame[b]} is sat}
 }
 
 test suite for notEndGame {
@@ -575,6 +579,20 @@ pred playerChanges[pre, post: Board] {
     post.turn != pre.turn
 }
 
+pred oneRowBoard[pre, post: Board] {
+    player1Win[pre]
+    pre.turn = Player1
+    player1Win[post]
+    post.turn = Player1
+    all holeNum: Int | {
+        no pre.prev[holeNum] and no post.prev[holeNum]
+        (holeNum != 0 and holeNum != 1 and holeNum != 2 ) implies {
+            no pre.hole[holeNum] and no post.hole[holeNum]
+        }
+    }
+}
+
+// TEST SUITE FOR DONOTHING + NOTDONOTHING
 test suite for doNothing {
     -- all holes must stay the same when doing nothing
     assert all disj b1, b2: Board | boardStaysSame[b1, b2] is necessary for doNothing[b1, b2]
@@ -584,14 +602,18 @@ test suite for doNothing {
     assert all disj b1, b2: Board | otherMancalaStaysSame[b1, b2, 3] is necessary for doNothing[b1, b2]
     -- game must be over when doing nothing
     assert all disj b1, b2: Board | endGame[b1] is necessary for doNothing[b1, b2]
+    -- winning is preserved
+    assert all disj b1, b2: Board | endGame[b2] is necessary for doNothing[b1, b2]
+    -- a one hole board that stays the same satisfies do nothing
+    assert all disj b1, b2: Board | oneRowBoard[b1, b2] is sufficient for doNothing[b1, b2]
 
     test expect { 
         -- doNothing doesn't interfere with wellformed
-        wellformedDoNothing: {all disj b1, b2: Board | wellformed[b1] and doNothing[b1, b2]} is sat
+        wellformedDoNothing: {some disj b1, b2: Board | wellformed[b1] and doNothing[b1, b2]} is sat
         -- doNothing works with init
         initDoNothing: {all disj b1, b2: Board | init[b1] and doNothing[b1, b2]} is sat
         -- doNothing is satisfiable
-        doNothingOnly: {all disj b1, b2: Board | doNothing[b1, b2]} is sat
+        doNothingOnly: {some disj b1, b2: Board | doNothing[b1, b2]} is sat
     }
 }
 
@@ -607,15 +629,15 @@ test suite for notDoNothing {
 ---------------------------------------------------------------
 
 // PREDICATES FOR TESTING GAME_TRACE
-pred wellformedBoards[g : Game] {
-    all b: Board | wellformed[b] implies {some g.next[b] implies {wellformed[b]}}
+pred wellformedBoards {
+    all b: Board | wellformed[b] implies {some Game.next[b] implies {wellformed[b]}}
 }
 
 pred oneMove {
     init[Game.first]
     some Game.next[Game.first]
     some holeNum: Int | move[Game.first, holeNum, Game.next[Game.first]]
-    wellformedBoards[Game]
+    wellformedBoards
 }
 
 pred someMove {
@@ -629,11 +651,11 @@ pred oneDoNothing {
     init[Game.first]
     some Game.next[Game.first]
     doNothing[Game.first, Game.next[Game.first]]
-    wellformedBoards[Game]
+    wellformedBoards
 }
 
 pred twoTransitionsAtOnce {
-    wellformedBoards[Game]
+    wellformedBoards
     some b: Board | {
         some Game.next[b]
         doNothing[b, Game.next[b]]
@@ -641,20 +663,46 @@ pred twoTransitionsAtOnce {
     }
 }
 
-pred lessThan7MarblesEach[g: Game] {
-    wellformedBoards[g]
-    all b: Board | wellformed[b] implies {some g.next[b] implies {
+pred lessThan7MarblesEach {
+    wellformedBoards
+    all b: Board | wellformed[b] implies {some Game.next[b] implies {
         wellformed[b] 
         all holeNum: Int | b.hole[holeNum] < 7
-        }}
+    }}
 }
 
+pred winningPreserved {
+    all b: Board | endGame[b] implies {some Game.next[b] implies {
+        endGame[Game.next[b]]
+    }}
+}
+
+pred moveGameOver {
+    all b: Board | {
+        endGame[b] and
+        some Game.next[b]
+        some holeNum: Int | move[b, holeNum, Game.next[b]]
+    }
+}
+
+pred doNothingGameNotOver {
+     all b: Board | {
+        not endGame[b] and
+        some Game.next[b]
+        doNothing[b, Game.next[b]]
+    }
+}
+
+// TEST SUITE FOR GAME_TRACE
 test suite for game_trace {
     assert all g: Game | init[g.first] is necessary for game_trace 
-    assert all g: Game | wellformedBoards[g] is necessary for game_trace
-    assert all g: Game | lessThan7MarblesEach[g] is necessary for game_trace for {next is linear}
+    assert wellformedBoards is necessary for game_trace
+    assert lessThan7MarblesEach is necessary for game_trace for {next is linear}
+    assert winningPreserved is necessary for game_trace for {next is linear}
 
     test expect { 
+        -- game_trace is satisfiable
+        gameSat: {game_trace} is sat
         -- initial move satisfies game_trace
         initialMove: {oneMove and game_trace} is sat
         -- some move satisfies game_trace
@@ -663,6 +711,10 @@ test suite for game_trace {
         initialDoNothing: {oneDoNothing and game_trace} is unsat
         -- can't do two transitions at once
         twoTransitions: {twoTransitionsAtOnce and game_trace} is unsat
+        -- can't move when game is over 
+        moveButGameOver: {moveGameOver and game_trace} is unsat
+        -- can't do nothing when game is over
+        noMoveButGameNotOver: {doNothingGameNotOver and game_trace} is unsat
     }
 }
 
