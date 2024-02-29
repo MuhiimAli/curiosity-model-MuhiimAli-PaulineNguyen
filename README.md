@@ -61,8 +61,32 @@ The game we chose to  modele is Mancala, a two-player board game.
 - To check for valid games (with valid moves made on each board), we ran `game_trace`.
  
 - ![screenshot](images/run5.png)
-## Part 3: Sigs and predicates
-
+### c. visualizer
+- We don't have a visualizer because the process of creating one was a bit complicated and time-consuming, and we also realized that we didn't need one
+- Instead of using the graph to understand our model, it is best to use the table. When you click on 'Table,' you will see five main tables: hole, turn, prev, next, and first. We recommend just looking at the table labeled 'hole' to see how the board updates after players make a move.
+- Here is how to interpret an instance of the board in the hole table:
+  - ![screenshot](images/table.png)
+  - ![screenshot](images/mancalaBoard.jpg)
+## Part 3: Signatures and Predicates
+### Signatures
+In our model, we used the following two signatures:
+- Board:
+  - This signature represents the Mancala board. For simplification purposes, we modeled it as a "stack". It consists of 8 slots in total, which include 6 holes and two Mancalas. Please see below for a visual representation of the board.
+- Player:
+  - We have an abstract player signature, which is extended by Player 1 and Player 2. Since Mancala is a two-player game, we only needed to model two players.
+### Predicates
+Here are the main predicates in our model:
+- pred init
+  - This predicate defines the conditions for what the initial board of Mancala should look like.
+- pred wellformed:
+  - This predicate establishes the constraints needed to have a well-formed Mancala board at all times. A well-formed Mancala board has exactly 8 holes, numbered 0 through 7. Each hole has exactly one previous hole, and the number of marbles per hole is not negative.
+- pred move:
+  - Sets up the guards that should be in place in order to make a move. This includes checking that the game is not over, that it is the correct player's turn, and that the move location is valid.
+  - It then defines the consequences of making a move, which includes updating the number of marbles in the holes where the player placed a marble and switching turns if necessary.
+- pred doNothing:
+  - When a game is over, which only happens if either player has won, this predicate enforces that everything on the board remains unchanged.
+- game_trace:
+  - Represents a game from start to end. Each move is a transition from one board (pre: the board before the move) to another board (post: the board after the move).
 
 ## Part 4: Testing
 - Our testing strategy involved writing tests for every predicate, as well as tests for the opposite (not predicate). For example, for every predicate, we use assert statements to check that each expected property is necessary for the predicate, some other properties are sufficient, and some properties are sufficient for violating the predicate. We also use some test expect blocks to check that the predicates are satisfiable by themselves, and in combination with other predicates. We also check for unsatisfiable cases to ensure that we are not under constraining. We made a game_trace predicate that we could use to test properties that should hold for the entire game.
