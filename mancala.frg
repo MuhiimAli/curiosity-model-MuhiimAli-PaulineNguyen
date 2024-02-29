@@ -4,14 +4,17 @@ abstract sig Player {}
 one sig Player1, Player2 extends Player {}
 
 sig Board {
+    -- hole num --> prev hole num
     prev: pfunc Int -> Int,
+    -- hole num --> num marbles in that hole
     hole: pfunc Int -> Int,
+    -- whose turn it is
     turn: one Player
 }
 ---------------------------------------------------------------
 --  -Model of our Board:
---      - There are exactly 8 holes on the board, numbered 0 through 7, that can have marbles
---      - Each hole has a previous hole (hole0's prev = hole7). This creates a linear, sequantial link between the holes
+--      - There are exactly 8 holes on the board (including mancalas) that can have marbles, numbered 0 through 7
+--      - Each hole has a previous hole (hole0's prev = hole7). This creates a cyclical, sequantial link between the holes
 --      - The number of marbles per hole can't be negative
 
 pred wellformed[b: Board] {
@@ -41,7 +44,7 @@ pred init[b: Board]{
 }
 
 ---------------------------------------------------------------
---  (Helper Method for move)
+--  (Helper pred for move)
 --      - Allows the player to continue playing if they've placed the last marble in their mancala
 --      - If that is not the case, it updates turn to be the next player's turn
 
@@ -58,7 +61,7 @@ pred checkTurn[pre, post: Board, myMancala: Int] {
     }
 }
 ---------------------------------------------------------------
---  -(Helper Method for move):
+--  -(Helper pred for move):
 --  - It updates the number of marbles in each hole after a move is made
 --      - The starting hole, which is the hole that the player chose to pick the marbles from, is set to 0
 --      - The number of marbles in the other person's mancala remains unchanged
@@ -100,7 +103,7 @@ pred updateNumMarbles[pre, post: Board, startingHole, otherMancala: Int] {
 -- "Transition relation"
 --      - Checks that game is not over 
 --      - Checks that the starting hole is on the board
---      - Checks that the it's the right player's turn, and then allows player to make 
+--      - Checks that it's the right player's turn, and then allows player to make 
 --        a move starting from a non-empty hole in their row 
 
 pred move[pre: Board, holeNum: Int, post: Board] {
@@ -175,20 +178,6 @@ pred doNothing[pre, post: Board] {
     }
 }
 
-one sig Game {
-    first: one Board, 
-    next: pfunc Board -> Board
-}
-
-pred game_trace {
-    wellformed[Game.first]
-    init[Game.first]
-    all b: Board | { some Game.next[b] implies {
-        (some holeNum: Int | move[b, holeNum, Game.next[b]]) or
-        doNothing[b, Game.next[b]]
-    }}
-}
-
 // checking initial board
 // run {
 //     some b: Board | { init[b] and wellformed[b]}
@@ -225,7 +214,22 @@ pred game_trace {
 //     }
 // } for exactly 2 Board
 
+one sig Game {
+    first: one Board, 
+    next: pfunc Board -> Board
+}
+
+-- represents a game from start to end, where each board is a move 
+pred game_trace {
+    wellformed[Game.first]
+    init[Game.first]
+    all b: Board | { some Game.next[b] implies {
+        (some holeNum: Int | move[b, holeNum, Game.next[b]]) or
+        doNothing[b, Game.next[b]]
+    }}
+}
+
 // checking entire game
 run { 
     game_trace
-} for 15 Board for {next is linear}
+} for 20 Board for {next is linear}
