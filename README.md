@@ -38,6 +38,7 @@ The game we chose to  modele is Mancala, a two-player board game.
   1. ##### **Reducing the Number of Holes**
   In traditional Mancala, the board consists of two rows with six holes each, plus two Mancalas (one for each player) on opposite ends. 
   For simplification, our model reduces the total number of holes to six, with three holes allocated for each player. 
+
   2. ##### **No Marble or Hole Sig**
   We chose not to have a separate Sig for marbles because we figured all marbles are the same, so we only care about the number of them in each hole, and can therefore represent them as integers. 
   We chose not to have a hole Sig because we only cared about how many marbles were in the hole, which could more easily be represented as a pfunc (mapping hole number to number of marbles), within our Board.
