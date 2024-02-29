@@ -71,7 +71,7 @@ The game we chose to  modele is Mancala, a two-player board game.
 ### Signatures
 In our model, we used the following two signatures:
 - Board:
-  - This signature represents the Mancala board. For simplification purposes, we modeled it as a "stack". It consists of 8 slots in total, which include 6 holes and two Mancalas. Please see below for a visual representation of the board.
+  - This signature represents the Mancala board. For simplification purposes, we modeled it as a "stack". It consists of 8 slots in total, which include 6 holes and two Mancalas. Please see above for a visual representation of the board.
 - Player:
   - We have an abstract player signature, which is extended by Player 1 and Player 2. Since Mancala is a two-player game, we only needed to model two players.
 ### Predicates
