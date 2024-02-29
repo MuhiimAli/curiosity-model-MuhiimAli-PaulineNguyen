@@ -1,4 +1,4 @@
-## Part 1: Game Info
+## Part 1: Project Objective
 The game we chose to  modele is Mancala, a two-player board game.
 
 ### Setup
@@ -18,23 +18,55 @@ The game we chose to  modele is Mancala, a two-player board game.
 
 ### Game End
 - The game ends when all six holes on one side of the board are empty. The player with the most marbles in their Mancala is declared the winner.
-## Part 2: Parts of the Mancala game that have been Partially Abstracted or Simplified
+## Part 2: Model Design and Visualization
+### a. **Model Design Choices:**
+- #### Board
+  1. ##### **Simplified Board Representation:**
+    Rather than modeling the board as two distinct rows, the model abstracts it into a linear sequence, or "stack." Here is the simplified representation:
+     - Holes numbered 0 through 2 are designated for Player 1.
+     - Holes numbered 4 through 6 are for Player 2.
+     - Hole 3 serves as Player 1’s Mancala, and Hole 7 as Player 2’s Mancala.
 
-### Reducing number of Holes
-In traditional Mancala, the board consists of two rows with six holes each, plus two Mancalas (one for each player) on opposite ends. 
-For simplification, our model reduces the total number of holes to six, with three holes allocated for each player. 
+  ![screenshot](images/board.jpg)
 
-### Simplified Board Representation
-Rather than modeling the board as two distinct rows, the model abstracts it into a linear sequence, or "stack." Here is the simplified representation:
-- Holes numbered 0 through 2 are designated for Player 1.
-- Holes numbered 4 through 6 are for Player 2.
-- Hole 3 serves as Player 1’s Mancala, and Hole 7 as Player 2’s Mancala.
+  2. ##### Board fields
+  We chose to have our board store the player’s turn, the order of the holes, and the number of marbles in each hole.
+  We stored it all in board because each board represents a new move, and so we can easily access the information we need when making a move from the previous to post board.
+  We chose to have the prev function so we can compare a hole’s marbles with its previous hole (which is useful for when we needed to check for the last marble played in a move).
 
-![screenshot](board.jpg)
-### Reasons for Simplification
-- A smaller board with fewer holes simplifies the logic required to the model game dynamics, making it easier to develop and test predicates that simulate gameplay.
+- #### Holes
+  1. ##### **Reducing the Number of Holes**
+  In traditional Mancala, the board consists of two rows with six holes each, plus two Mancalas (one for each player) on opposite ends. 
+  For simplification, our model reduces the total number of holes to six, with three holes allocated for each player. 
+  2. ##### **No Marble or Hole Sig**
+  We chose not to have a separate Sig for marbles because we figured all marbles are the same, so we only care about the number of them in each hole, and can therefore represent them as integers. 
+  We chose not to have a hole Sig because we only cared about how many marbles were in the hole, which could more easily be represented as a pfunc (mapping hole number to number of marbles), within our Board.
 
-## Part 3: Takeaways
+### b. Run Statements
+
+- To check for a well-formed initial board, we had separate run statements for both `wellformed` and `init`, and then one together to make sure that a well-formed initial board is what we expect.
+  
+- ![screenshot](images/run1.png)
+
+- To check for valid first moves, we ran `move` with a well-formed initial pre-board.
+  
+- ![screenshot](images/run2.png)
+- To check for valid moves, we ran `move` with a well-formed pre-board (with fewer than 7 marbles, a property that holds for our model without being constrained explicitly).
+  
+- ![screenshot](images/run3.png)
+- To check for valid do-nothings, we ran `doNothing` with a well-formed pre-board.
+ 
+- ![screenshot](images/run4.png)
+- To check for valid games (with valid moves made on each board), we ran `game_trace`.
+ 
+- ![screenshot](images/run5.png)
+## Part 3: Sigs and predicates
 
 
-## Part 4: How to run it and how to read the table
+## Part 4: Testing
+- Our testing strategy involved writing tests for every predicate, as well as tests for the opposite (not predicate). For example, for every predicate, we use assert statements to check that each expected property is necessary for the predicate, some other properties are sufficient, and some properties are sufficient for violating the predicate. We also use some test expect blocks to check that the predicates are satisfiable by themselves, and in combination with other predicates. We also check for unsatisfiable cases to ensure that we are not under constraining. We made a game_trace predicate that we could use to test properties that should hold for the entire game.
+- Some of the things we tested were that the game starts with evenly distributed marbles, a player makes a move only on their turn and is able to make a proper move (taking marbles from the starting pile, and distributing them in the correct direction while skipping the other player’s mancala), a player only does nothing when the game is over, and the board switches turns depending on where the last marble is placed. More specifics can be found in the comments in our test file.
+- To verify our model, we also used induction (included in the “induction” section of our test suite). This involved a test checking that given a wellformed initial board, then after a transition, the post-board is also wellformed. In addition, we checked that from any wellformed board (not just the initial one), a transition will preserve the well formed property. These two tests prove that if we start with a wellformed board, all boards in the game will be wellformed.
+
+## Part 5: Documentation
+Done!
