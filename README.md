@@ -1,5 +1,5 @@
 ## Part 1: Project Objective
-The game we chose to  modele is Mancala, a two-player board game.
+The game we chose to  model is Mancala, a two-player board game.
 
 ### Setup
 - The Mancala board consists of two rows, each with six holes.
