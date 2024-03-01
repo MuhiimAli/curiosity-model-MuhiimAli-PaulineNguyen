@@ -121,7 +121,7 @@ Here are the main predicates in our model. In the context of the game, the predi
 - pred wellformed:
   - This predicate establishes the constraints needed to have a well-formed Mancala board at all times. A well-formed Mancala board has exactly 8 holes, numbered 0 through 7. Each hole has exactly one previous hole, and the number of marbles per hole is not negative.
 - pred move:
-  - Sets up the guards that should be in place in order to make a move. This includes checking that the game is not over, that it is the correct player's turn, and that the move location is valid.
+  - Sets up the guards that should be in place in order to make a move. This includes checking that the game is not over, that it is the correct player's turn, and that the move location is valid (starting hole must be in the player's row and must not already be empty).
   - It then defines the consequences of making a move, which includes updating the number of marbles in the holes where the player placed a marble and switching turns if necessary.
   - It also forces everything else about the board (like the order of the holes, the number of marbles in the other unused holes) to remain unchanged.
 - pred doNothing:
