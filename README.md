@@ -1,6 +1,6 @@
 ## Part 1: Project Objective
 
-The game we chose to model is Mancala, a two-player board game. We chose to model this game because we think the game is pretty fun and we were curious to see how the game would look on a smaller scale.
+The game we chose to model is Mancala, a two-player board game. We chose to model this game because we think the game is pretty fun and we were curious to see how long a typical game goes on for before somebody wins.
 
 ### Setup
 
@@ -88,7 +88,7 @@ The game we chose to model is Mancala, a two-player board game. We chose to mode
 
 ### c. Visualizer
 
-- We don't have a visualizer because the process of creating one was a bit complicated and time-consuming, and we also realized that we didn't need one because the default was sufficient.
+- We don't have a custom visualizer because we felt the defualt was sufficient. The only trouble may be picturing which hole goes where, but we included the diagram above to make it easier.
 - Instead of using the graph to understand our model, which is clustered and hard to read, it is best to use the table. When you click on 'Table,' you will see five main tables: hole, turn, prev, next, and first. 'Prev' represents the order of the holes, which should stay the same for every board so it's not super important to look at. 'First' represents the starting board, and 'next' indicates the order of the boards (which goes in ascending order). We recommend primarily looking at the table labeled 'hole' to see how the board updates after players make a move, as well as 'turn' to see who is making the move that leads to the next board.
 - Here is how to interpret an instance of the board in the hole table:
 
@@ -139,5 +139,5 @@ Here are the main predicates in our model. In the context of the game, the predi
 
 ### Takeaways
 
-We learned that, given the simplification of our model, the game finishes rather quickly. Generally, the game is over in fewer than 15 traces (around 10, but occasionally more than that). We were curious to see if some kind of pattern would emerge from the gameplay, but the outcomes seem pretty consistent between either player winning. We did not see ties as often, which is to be expected considering those ones usually emerge from longer traces.
+We learned that, given the simplification of Mancala, the game finishes rather quickly. Most times (not all), the game is over in fewer than 15 boards (around 10, but occasionally more than that). By observing our game traces, we also learned that it's a bad strategy to let too many marbles collect on your side, because the other player's side is almost empty and the game is nearly over, so you would have fewer marbles in your own mancala. We were curious to see if any player had an unseen advantage, but the outcomes seem pretty consistent between either player winning. We did not see ties as often, which is to be expected considering those ones usually emerge from longer traces.
 In terms of modeling, we learned how difficult it is to try to get things to scale, especially when working with a limited range of integers. We also learned that some design choices may make more sense in terms of mental models, like having separate classes for each item, but may not be as functional to the model because of less efficient access. In terms of testing, we realized how important it was to go step by step, so that when something goes wrong, you know exactly what’s causing the issue, and where to look in the code. We also had an easier time looking at counterexamples shown by the Sterling visualizer due to how many times we had to look at it to debug. If we were to expand on this idea, we might add some additional rules that other versions of Mancala have (like allowing a player to 'capture' the other player's marbles if the last marble lands in an empty hole). It might also be cool to see what would happen if we allow a player to repeat a turn if they land in a non-empty hole.
