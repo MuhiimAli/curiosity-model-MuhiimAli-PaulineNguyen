@@ -677,6 +677,10 @@ pred winningPreserved {
     }}
 }
 
+pred someEmptyHole {
+    all b: Board | some holeNum: Int | b.hole[holeNum] = 0
+}
+
 pred moveGameOver {
     all b: Board | {
         endGame[b] and
@@ -695,10 +699,16 @@ pred doNothingGameNotOver {
 
 // TEST SUITE FOR GAME_TRACE
 test suite for game_trace {
+    -- game must start with initial board
     assert all g: Game | init[g.first] is necessary for game_trace 
+    -- all boards wellformed in a game
     assert wellformedBoards is necessary for game_trace
+    -- all boards have less than 7 marbles in a game
     assert lessThan7MarblesEach is necessary for game_trace for {next is linear}
+    -- if somebody wins, that same player wins in the next board
     assert winningPreserved is necessary for game_trace for {next is linear}
+    -- there must be some empty hole in every board of the game 
+    assert someEmptyHole is necessary for game_trace for {next is linear}
 
     test expect { 
         -- game_trace is satisfiable

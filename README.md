@@ -16,7 +16,7 @@ The game we chose to model is Mancala, a two-player board game. We chose to mode
 
 - Mancala has so many different versions. Here's how to play our version:
   1. **Starting the Game**: The game begins with one player picking up all the marbles from any hole on their side of the board.
-  2. **Marble Movement**: Players can only pick marbles from holes on their side. Moving counterclockwise, the player places one marble in each hole, including their own Mancala, but not in their opponent's Mancala. If you reach your opponent's Mancala, skip it and continue to the next hole.
+  2. **Marble Movement**: Players can only pick marbles from a hole on their side. Moving counterclockwise, the player places one marble in each hole, including their own Mancala, but not in their opponent's Mancala. If you reach your opponent's Mancala, skip it and continue to the next hole.
   3. **Extra Turn**: If the last marble you placed is in your own Mancala, you earn another turn.
   4. **Changing Turns**: If the last marble is not placed in your Mancala, it becomes the opponent's turn.
 
@@ -31,17 +31,19 @@ The game we chose to model is Mancala, a two-player board game. We chose to mode
 - #### Board
 
   1. ##### **Simplified Board Representation:**
+
      Rather than modeling the board as two distinct rows, the model abstracts it into a numbered cycle. On the left is what the board might look like, and on the right is the simplified representation (where the arrows indicate the previous holes):
+
      - Holes numbered 0 through 2 are designated for Player 1.
      - Holes numbered 4 through 6 are for Player 2.
      - Hole 3 serves as Player 1’s Mancala, and Hole 7 as Player 2’s Mancala.
 
-  <img src="images/board_in_game.png" width="500">
-  <img src="images/board_model.png" width="250">
+      <img src="images/board_in_game.png" width="500">
+      <img src="images/board_model.png" width="250">
 
-  Left: what the physical board would look like
+     Left: what the physical board would look like
 
-  Right: how we represent the model (we only care about the hole numbers and their order, not the actual shape of the board)
+     Right: how we represent the model (we only care about the hole numbers and their order, not the actual shape of the board)
 
   2. ##### Board fields
      We chose to have our board store the player’s turn, the order of the holes, and the number of marbles in each hole.
@@ -61,22 +63,24 @@ The game we chose to model is Mancala, a two-player board game. We chose to mode
 
 - #### Move
   1. ##### **What counts as a move**
-      We chose to model a move by forcing the starting hole to be empty after a move is made, and forcing the number of holes whose marbles have increased to be equal to the number of marbles in the starting hole. This prevents a player from making a move that wraps around the board in a full circle. We chose to do this because in a realistic, full scale game, we never really encounter this case, and it is not strategic to allow that many marbles to pile up into one hole (considering that it gives the other player a lot of marbles on their side, and only contributes 1 to the mancala). In doing this, we avoided a scenario where we would need more than 7 marbles, which solves the bitwidth limitation (since we represented marbles as integers).
+     We chose to model a move by forcing the starting hole to be empty after a move is made, and forcing the number of holes whose marbles have increased to be equal to the number of marbles in the starting hole. This prevents a player from making a move that wraps around the board in a full circle. We chose to do this because in a realistic, full scale game, we never really encounter this case, and it is not strategic to allow that many marbles to pile up into one hole (considering that it gives the other player a lot of marbles on their side, and only contributes 1 to the mancala). In doing this, we avoided a scenario where we would need more than 7 marbles, which solves the bitwidth limitation (since we represented marbles as integers).
   2. ##### **How we get the move to be made in the correct order**
-      Since our holes are numbered 0-7, and each hole is linked to its previous hole via prev, we checked that if any hole got a new marble, it's previous hole must have gotten a new one too (to ensure the player is not scattering marbles at random). The exception to this is when the previous hole is the other player's mancala or the starting hole (in which case it is okay for the hole to get a new marble since these specific previous holes should not be getting a new marble). One last check is made to ensure that the hole next to the other player's mancala only gets a new marble if the hole previous to the other mancala also got one (hence, a successful 'skipover').
+     Since our holes are numbered 0-7, and each hole is linked to its previous hole via prev, we checked that if any hole got a new marble, it's previous hole must have gotten a new one too (to ensure the player is not scattering marbles at random). The exception to this is when the previous hole is the other player's mancala or the starting hole (in which case it is okay for the hole to get a new marble since these specific previous holes should not be getting a new marble). One last check is made to ensure that the hole next to the other player's mancala only gets a new marble if the hole previous to the other mancala also got one (hence, a successful 'skipover').
 
 ### b. Run Statements
 
 - To check for a well-formed initial board, we had separate run statements for both `wellformed` and `init`, and then one together to make sure that a well-formed initial board is what we expect.
+
   - <img src="images/run1.png" width="300">
 
 - To check for valid first moves, we ran `move` with a well-formed initial pre-board.
   - <img src="images/run2.png" width="250">
-  
 - To check for valid moves, we ran `move` with a well-formed pre-board (with fewer than 7 marbles, a property that holds for our model without being constrained explicitly).
+
   - <img src="images/run3.png" width="300">
 
 - To check for valid do-nothings, we ran `doNothing` with a well-formed pre-board.
+
   - <img src="images/run4.png" width="300">
 
 - To check for valid games (with valid moves made on each board), we ran `game_trace`.
@@ -85,16 +89,21 @@ The game we chose to model is Mancala, a two-player board game. We chose to mode
 ### c. Visualizer
 
 - We don't have a visualizer because the process of creating one was a bit complicated and time-consuming, and we also realized that we didn't need one because the default was sufficient.
-- Instead of using the graph to understand our model, which is clustered and hard to read, it is best to use the table. When you click on 'Table,' you will see five main tables: hole, turn, prev, next, and first. Prev represents the order of the holes, which should stay the same for every board. First represents the starting board, and next indicates the order of the boards. We recommend primarily looking at the table labeled 'hole' to see how the board updates after players make a move, as well as 'turn' to see who is making the move that leads to the next board.
+- Instead of using the graph to understand our model, which is clustered and hard to read, it is best to use the table. When you click on 'Table,' you will see five main tables: hole, turn, prev, next, and first. 'Prev' represents the order of the holes, which should stay the same for every board so it's not super important to look at. 'First' represents the starting board, and 'next' indicates the order of the boards (which goes in ascending order). We recommend primarily looking at the table labeled 'hole' to see how the board updates after players make a move, as well as 'turn' to see who is making the move that leads to the next board.
 - Here is how to interpret an instance of the board in the hole table:
+
   - ![screenshot](images/table.png)
   - ![screenshot](images/mancalaBoard.jpg)
+
+    The first integer column is the hole number and the second integer column is the number of marbles. The bottom diagram shows how many marbles are in each hole. To match the hole number to where it is located in the physical board, see the diagrams in Part 2. 
+
+    Note: In the turn table, you would either see [Board2 Player10] or [Board2 Player20]. [Board2 Player10] would mean that the board after Board2 will represent Player1's move. [Board2 Player20] means the next board represents Player 2's move.
 
 ## Part 3: Signatures and Predicates
 
 ### Signatures
 
-In our model, we used the following three signatures: Game, Board, and Player. We have one Game which consists of multiple boards (with each Board representing a new move made and tracking whose turn it is), and two players (Player1 vs. Player2).
+In our model, we used the following three signatures: Game, Board, and Player. We have one Game which consists of multiple boards (with each Board representing a new move made and tracking whose turn it is), and two players (Player1 vs. Player2). We needed Game to keep track of the order of boards, we needed Board to keep track of moves and turns, and we needed Player to distinguish between Player1 and Player2.
 
 - Game:
   - This signature represents the entire game. Its first field will point to the initial board (where two marbles are in each hole, and the mancalas are empty). The next field provides the order of boards, which can be thought of as the order of moves made.
@@ -105,7 +114,7 @@ In our model, we used the following three signatures: Game, Board, and Player. W
 
 ### Predicates
 
-Here are the main predicates in our model. In the context of the game, the predicates init and wellformed ensure the gameboard is set up properly. The predicates move and doNothing represent a transition from one board to another (an action a player can take). The predicate game_trace models the entire game from the starting board to the next boards after that.
+Here are the main predicates in our model. In the context of the game, the predicates init and wellformed ensure the gameboard is set up properly. The predicates move and doNothing represent a transition from one board to another (an action a player can take). The predicate game_trace models the entire game from the starting board to the next boards after that. It calls wellformed and init on the first board, and does move or doNothing for the transitions to the next board.
 
 - pred init
   - This predicate defines the conditions for what the initial board of Mancala should look like.
@@ -114,7 +123,7 @@ Here are the main predicates in our model. In the context of the game, the predi
 - pred move:
   - Sets up the guards that should be in place in order to make a move. This includes checking that the game is not over, that it is the correct player's turn, and that the move location is valid.
   - It then defines the consequences of making a move, which includes updating the number of marbles in the holes where the player placed a marble and switching turns if necessary.
-  - It also forces everything else about the board (like the order of the holes, the number of marbles in the other unused holes) to remain unchanged. 
+  - It also forces everything else about the board (like the order of the holes, the number of marbles in the other unused holes) to remain unchanged.
 - pred doNothing:
   - When a game is over, which only happens if either player has won, this predicate enforces that everything on the board remains unchanged.
 - pred game_trace:
@@ -129,5 +138,6 @@ Here are the main predicates in our model. In the context of the game, the predi
 ## Part 5: Documentation
 
 ### Takeaways
+
 We learned that, given the simplification of our model, the game finishes rather quickly. Generally, the game is over in fewer than 15 traces (around 10, but occasionally more than that). We were curious to see if some kind of pattern would emerge from the gameplay, but the outcomes seem pretty consistent between either player winning. We did not see ties as often, which is to be expected considering those ones usually emerge from longer traces.
-In terms of modeling, we learned how difficult it is to try to get things to scale, especially when working with a limited range of integers. We also learned that some design choices may make more sense in terms of mental models, like having separate classes for each item, but may not be as functional to the model because of less efficient access. In terms of testing, we realized how important it was to go step by step, so that when something goes wrong, you know exactly what’s causing the issue, and where to look in the code. We also had an easier time looking at counterexamples shown by the Sterling visualizer due to how many times we had to look at it to debug.
+In terms of modeling, we learned how difficult it is to try to get things to scale, especially when working with a limited range of integers. We also learned that some design choices may make more sense in terms of mental models, like having separate classes for each item, but may not be as functional to the model because of less efficient access. In terms of testing, we realized how important it was to go step by step, so that when something goes wrong, you know exactly what’s causing the issue, and where to look in the code. We also had an easier time looking at counterexamples shown by the Sterling visualizer due to how many times we had to look at it to debug. If we were to expand on this idea, we might add some additional rules that other versions of Mancala have (like allowing a player to 'capture' the other player's marbles if the last marble lands in an empty hole). It might also be cool to see what would happen if we allow a player to repeat a turn if they land in a non-empty hole.
