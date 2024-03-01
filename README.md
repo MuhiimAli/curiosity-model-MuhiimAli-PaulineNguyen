@@ -136,8 +136,11 @@ Here are the main predicates in our model. In the context of the game, the predi
 - To verify our model, we also used induction (included in the “induction” section of our test suite). This involved a test checking that given a wellformed initial board, then after a transition, the post-board is also wellformed. In addition, we checked that from any wellformed board (not just the initial one), a transition will preserve the well formed property. These two tests prove that if we start with a wellformed board, all boards in the game will be wellformed.
 
 ## Part 5: Documentation
+### Comments
+We included comments in our files to provide more context.
 
 ### Takeaways
 
 We learned that, given the simplification of Mancala, the game finishes rather quickly. Most times (not all), the game is over in fewer than 15 boards (around 10, but occasionally more than that). By observing our game traces, we also learned that it's a bad strategy to let too many marbles collect on your side, because the other player's side is almost empty and the game is nearly over, so you would have fewer marbles in your own mancala. We were curious to see if any player had an unseen advantage, but the outcomes seem pretty consistent between either player winning. We did not see ties as often, which is to be expected considering those ones usually emerge from longer traces.
 In terms of modeling, we learned how difficult it is to try to get things to scale, especially when working with a limited range of integers. We also learned that some design choices may make more sense in terms of mental models, like having separate classes for each item, but may not be as functional to the model because of less efficient access. In terms of testing, we realized how important it was to go step by step, so that when something goes wrong, you know exactly what’s causing the issue, and where to look in the code. We also had an easier time looking at counterexamples shown by the Sterling visualizer due to how many times we had to look at it to debug. If we were to expand on this idea, we might add some additional rules that other versions of Mancala have (like allowing a player to 'capture' the other player's marbles if the last marble lands in an empty hole). It might also be cool to see what would happen if we allow a player to repeat a turn if they land in a non-empty hole.
+
